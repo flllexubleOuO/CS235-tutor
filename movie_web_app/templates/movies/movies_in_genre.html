@@ -39,13 +39,14 @@
         <a href="{{movie.hyperlink}}" target="_blank">
             <img src={{movie.image_hyperlink}} alt="movie image">
         </a>
-        <h2>{{movies}}  {{movie.release_year}}</h2>
+        <h2>{{movie.title}}  {{movie.release_year}}</h2>
         <p>{{movie.description}}</p>
         <p>Director: {{movie.director}}</p>
-        <p>Actors:</p>
+        <p style="margin:0;display:inline;float:left">Actors: </p>
         {% for actor in movie.actors %}
-            <p>actor</p>
+            <p style="margin:5;display:inline;float:left"> {{actor}}, </p>
         {% endfor %}
+        <p></p>
         <div style="float:left">
             {% for genre in movie.genres %}
             <button class="btn-general" onclick="location.href='{{ genre_urls[genre] }}'">{{ genre }}</button>
