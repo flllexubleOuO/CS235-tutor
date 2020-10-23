@@ -41,7 +41,9 @@ def register():
         username_error_message=username_not_unique,
         handler_url=url_for('authentication_bp.register'),
         selected_movies=utilities.get_selected_movies(),
-        rank_urls=utilities.get_rank_and_url()
+        rank_urls=utilities.get_rank_and_url(),
+        genre_urls=utilities.get_genres_and_urls(),
+        year_urls=utilities.get_years_and_urls(),
     )
 
 
@@ -81,7 +83,9 @@ def login():
         password_error_message=password_does_not_match_username,
         form=form,
         selected_movies=utilities.get_selected_movies(),
-        rank_urls=utilities.get_rank_and_url()
+        rank_urls=utilities.get_rank_and_url(),
+        genre_urls=utilities.get_genres_and_urls(),
+        year_urls=utilities.get_years_and_urls(),
     )
 
 

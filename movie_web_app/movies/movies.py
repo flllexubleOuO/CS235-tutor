@@ -356,75 +356,80 @@ def movies_by_search():
         cursor = int(cursor)
 
     all_movies = services.get_all_movies(repo.repo_instance)
+    movie_ranks = []
     if q:
-        movie_ranks = []
-
         for movie in all_movies:
-
+            try:
+                q = int(q)
+                if q in movie.values():
+                    if movie['rank'] not in movie_ranks:
+                        movie_ranks.append(movie['rank'])
+            except:
+                pass
             if q in movie.values() or q in movie['actors'] or q in movie['genres']:
-                movie_ranks.append(movie['rank'])
-            if q is int:
-                if int(q) in movie.values():
+                if movie['rank'] not in movie_ranks:
                     movie_ranks.append(movie['rank'])
-        # Retrieve the batch of movies to display on the Web page.
-        movies = services.get_movies_by_rank(movie_ranks[cursor:cursor + movies_per_page], repo.repo_instance)
 
-        movies_image = {}
+    # Retrieve the batch of movies to display on the Web page.
+    movies = services.get_movies_by_rank(movie_ranks[cursor:cursor + movies_per_page], repo.repo_instance)
+
+
+    movies_image = {}
+    for movie in movies:
+        title = movie["title"]
+        args = {"t": title}
+        link = "http://www.omdbapi.com/?{}&apikey=4421208f".format(urllib.parse.urlencode(args))
+        response = urlopen(link)
+        content = response.read()
+        content_dict = content.decode("UTF-8")
+        detail = ast.literal_eval(content_dict)
+        image = detail["Poster"]
+        movies_image[movie["title"]] = image
+
+    first_movie_url = None
+    last_movie_url = None
+    next_movie_url = None
+    prev_movie_url = None
+
+    if cursor > 0:
+        # There are preceding articles, so generate URLs for the 'previous' and 'first' navigation buttons.
+        prev_movie_url = url_for('movies_bp.movies_by_search', q=q, cursor=cursor - movies_per_page)
+        first_movie_url = url_for('movies_bp.movies_by_search', q=q)
+
+    if cursor + movies_per_page < len(movie_ranks):
+        # There are further movies, so generate URLs for the 'next' and 'last' navigation buttons.
+        next_movie_url = url_for('movies_bp.movies_by_search', q=q, cursor=cursor + movies_per_page)
+
+        last_cursor = movies_per_page * int(len(movie_ranks) / movies_per_page)
+        if len(movie_ranks) % movies_per_page == 0:
+            last_cursor -= movies_per_page
+        last_movie_url = url_for('movies_bp.movies_by_search', q=q, cursor=last_cursor)
+
+        # Construct urls for viewing movie reviews and adding reviews.
         for movie in movies:
-            title = movie["title"]
-            args = {"t": title}
-            link = "http://www.omdbapi.com/?{}&apikey=4421208f".format(urllib.parse.urlencode(args))
-            response = urlopen(link)
-            content = response.read()
-            content_dict = content.decode("UTF-8")
-            detail = ast.literal_eval(content_dict)
-            image = detail["Poster"]
-            movies_image[movie["title"]] = image
-
-        first_movie_url = None
-        last_movie_url = None
-        next_movie_url = None
-        prev_movie_url = None
-
-        if cursor > 0:
-            # There are preceding articles, so generate URLs for the 'previous' and 'first' navigation buttons.
-            prev_movie_url = url_for('movies_bp.movies_by_search', q=q, cursor=cursor - movies_per_page)
-            first_movie_url = url_for('movies_bp.movies_by_search', q=q)
-
-        if cursor + movies_per_page < len(movie_ranks):
-            # There are further movies, so generate URLs for the 'next' and 'last' navigation buttons.
-            next_movie_url = url_for('movies_bp.movies_by_search', q=q, cursor=cursor + movies_per_page)
-
-            last_cursor = movies_per_page * int(len(movie_ranks) / movies_per_page)
-            if len(movie_ranks) % movies_per_page == 0:
-                last_cursor -= movies_per_page
-            last_movie_url = url_for('movies_bp.movies_by_search', q=q, cursor=last_cursor)
-
-            # Construct urls for viewing movie reviews and adding reviews.
-            for movie in movies:
-                movie['view_review_url'] = url_for('movies_bp.movies_by_search', q=q, cursor=cursor,
+            movie['view_review_url'] = url_for('movies_bp.movies_by_search', q=q, cursor=cursor,
                                                    view_reviews_for=movie['rank'])
-                movie['add_review_url'] = url_for('movies_bp.review_on_movie', movie=movie['rank'])
+            movie['add_review_url'] = url_for('movies_bp.review_on_movie', movie=movie['rank'])
 
-        if movie_ranks == []:
-            return render_template(
-                'movies/movies.html',
-                movies_title='Search result: Not Found',
-                #movies=movies,
-                selected_movies=utilities.get_selected_movies(10),
-                year_urls=utilities.get_years_and_urls(),
-                genre_urls=utilities.get_genres_and_urls(),
-                rank_urls=utilities.get_rank_and_url(),
-                first_movie_url=first_movie_url,
-                last_movie_url=last_movie_url,
-                prev_movie_url=prev_movie_url,
-                next_movie_url=next_movie_url,
-                show_reviews_for_movie=movie_to_show_reviews,
-            )
+    if movie_ranks == []:
+        return render_template(
+            'movies/movies.html',
+            movies_title='Search result: Not Found',
+            #movies=movies,
+            selected_movies=utilities.get_selected_movies(10),
+            year_urls=utilities.get_years_and_urls(),
+            genre_urls=utilities.get_genres_and_urls(),
+            rank_urls=utilities.get_rank_and_url(),
+            first_movie_url=first_movie_url,
+            last_movie_url=last_movie_url,
+            prev_movie_url=prev_movie_url,
+            next_movie_url=next_movie_url,
+            show_reviews_for_movie=movie_to_show_reviews,
+        )
 
     return render_template(
         'movies/movies.html',
-        movies_title='Search result: ' + q,
+        movies_title='Search result: ' + str(q),
         movies=movies,
         image=movies_image,
         selected_movies=utilities.get_selected_movies(10),
@@ -453,12 +458,8 @@ class ProfanityFree:
 class ReviewForm(FlaskForm):
     review = TextAreaField('Review', [
         DataRequired(),
-        Length(max=1000, message='Your review is too long'),
+        Length(min=4, message='Your review is too short'),
         ProfanityFree(message='Your review must not contain profanity')])
     rating = SelectField('Rating', choices=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10], coerce=int)
     movie_rank = HiddenField("Movie rank")
     submit = SubmitField('Submit')
-
-
-class SearchForm(FlaskForm):
-    search = StringField(u'Search')

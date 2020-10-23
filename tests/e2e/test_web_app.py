@@ -84,9 +84,9 @@ def test_review(client, auth):
 
 
 @pytest.mark.parametrize(('review', 'messages'), (
-        ('Who thinks this movie is a fuckwit?', (b'Your comment must not contain profanity')),
-        ('Hey', (b'Your comment is too short')),
-        ('ass', (b'Your comment is too short', b'Your comment must not contain profanity')),
+        ('Who thinks this movie is a fuckwit?', (b'Your review must not contain profanity')),
+        ('Hey', (b'Your review is too short')),
+        ('ass', (b'Your review is too short', b'Your review must not contain profanity')),
 ))
 def test_review_with_invalid_input(client, auth, review, messages):
     # Login a user.
@@ -103,25 +103,34 @@ def test_review_with_invalid_input(client, auth, review, messages):
 
 
 
-def test_articles_with_year(client):
+def test_movies_with_year(client):
     # Check that we can retrieve the articles page.
-    response = client.get('/movies_by_year?release_year=2007')
+    response = client.get('/movies_by_year?release_year=2010')
     assert response.status_code == 200
 
-
     # Check that all articles on the requested date are included on the page.
-    assert b'5- 25- 77' in response.data
-    assert b"Pirates of the Caribbean: At World's End" in response.data
+    assert b'Inception' in response.data
+    assert b'Shutter Island' in response.data
 
 
-def test_movies_with_review(client):
-    # Check that we can retrieve the articles page.
-    response = client.get('/movies_by_year?release_year=2007&view_reviews_for=1')
+def test_movies_with_review(client,auth):
+    # Login a user.
+    auth.login()
+
+    # Check that we can retrieve the comment page.
+    response = client.get('/review?movie=40')
+
+    response = client.post(
+        '/review',
+        data={'review': 'Goooooood!', 'movie_rank': 40, 'rating': 8}
+    )
+    # Check that we can retrieve the movies page.
+    response = client.get('/movies_by_rank?rank=40&view_reviews_for=40')
     assert response.status_code == 200
 
     # Check that all comments for specified article are included on the page.
-    assert b'Oh no, COVID-19 has hit New Zealand' in response.data
-    assert b'Yeah Freddie, bad news' in response.data
+    assert b'Goooooood!' in response.data
+    assert b'8' in response.data
 
 
 def test_movies_with_genre(client):
@@ -129,7 +138,47 @@ def test_movies_with_genre(client):
     response = client.get('/movies_by_genre?genre=Adventure')
     assert response.status_code == 200
 
-    # Check that all articles tagged with 'Health' are included on the page.
+    # Check that all movies tagged with 'Adventure' are included on the page.
     assert b'Prometheus' in response.data
     assert b'Guardians of the Galaxy' in response.data
-    assert b'La La Land' not in response.data
+
+def test_movies_in_sidebar(client):
+    response = client.get('/movies_by_rank?rank=2')
+    assert response.status_code == 200
+
+    assert b'Prometheus' in response.data
+    assert b'Actors:' in response.data
+    assert b'Ridley Scott' in response.data
+
+
+def test_search_with_actor(client):
+    response = client.get('/movies_by_search?q=Chris+Pratt')
+    assert response.status_code == 200
+
+    assert b'Search result: Chris Pratt' in response.data
+    assert b'Jurassic World' in response.data
+    assert b'Chris Pratt' in response.data
+
+
+def test_search_with_release_year(client):
+    response = client.get('/movies_by_search?q=2014')
+    assert response.status_code ==200
+
+    assert b'Search result: 2014' in response.data
+    assert b'Interstellar' in response.data
+    assert b'Guardians of the Galaxy' in response.data
+
+def test_search_with_release_year_second_page(client):
+    response = client.get('/movies_by_search?q=2014&cursor=2')
+    assert response.status_code == 200
+
+    assert b'Search result: 2014' in response.data
+    assert b'John Wick' in response.data
+    assert b'Kingsman: The Secret Service' in response.data
+
+
+def test_search_with_unknown_result(client):
+    response = client.get('/movies_by_search?q=Big')
+    assert response.status_code == 200
+
+    assert b'Search result: Not Found'
