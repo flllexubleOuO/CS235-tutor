@@ -167,15 +167,23 @@ img {
 
 .btn-sidebar {
   padding: 10px;
-  border-bottom: 1px solid grey;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
   color: black;
   display: flex;
+  text-align: center
 }
 
 .btn-sidebar:hover {
   background-color: grey;
+  color: lightgrey;
+}
+
+.btn-title {
+  color: black;
+  font-size: 30px;
+  font-weight: bold;
+}
+
+.btn-title:hover {
   color: lightgrey;
 }
 

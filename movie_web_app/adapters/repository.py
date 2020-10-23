@@ -55,6 +55,10 @@ class AbstractRepository(abc.ABC):
     def add_movie_rank(self, rank, movie):
         raise NotImplementedError
 
+    @abc.abstractmethod
+    def all_movies(self):
+        raise NotImplementedError
+
     #@abc.abstractmethod
     ##def add_movie_details(self, movie, details):
         raise NotImplementedError

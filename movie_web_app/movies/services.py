@@ -94,6 +94,14 @@ def get_movies_by_rank(rank_list, repo: AbstractRepository):
     return movies_as_dict
 
 
+def get_all_movies(repo: AbstractRepository):
+    movies = repo.all_movies()
+
+    movies_as_dict = movies_to_dict(movies)
+
+    return movies_as_dict
+
+
 def get_reviews_for_movie(movie_rank, repo: AbstractRepository):
     movie = repo.get_movie(movie_rank)
 

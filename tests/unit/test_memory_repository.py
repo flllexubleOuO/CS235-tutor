@@ -113,3 +113,7 @@ def test_repository_does_not_retrieve_a_movie_in_empty_watchlist(in_memory_repo)
     movie = Movie("Moana", 2016)
     in_memory_repo.add_user(user)
     assert in_memory_repo.get_user_watch_list(user).size() == 0
+
+def test_repository_return_all_movies(in_memory_repo):
+    movies = in_memory_repo.all_movies()
+    assert len(movies) == 1000

@@ -61,6 +61,9 @@ class MemoryRepository(AbstractRepository):
     def add_movie_rank(self,rank,movie):
         self.__rank_of_movies[rank] = movie
 
+    def all_movies(self):
+        return self.__dataset_of_movies
+
     #def add_movie_details(self,movie,details):
     #    self.__movie_details[movie] = details
 

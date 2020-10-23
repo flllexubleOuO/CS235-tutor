@@ -39,15 +39,20 @@
         <a href="{{movie.hyperlink}}" target="_blank">
             <img src={{movie.image_hyperlink}} alt="movie image">
         </a>
-        <h2>{{movie.title}}  {{movie.release_year}}</h2>
+        <a class="btn-title" href="{{ rank_urls[movie.rank] }}">{{movie.title}}  {{movie.release_year}}</a>
         <p>{{movie.description}}</p>
         <p>Director: {{movie.director}}</p>
-        <p style="margin:0;display:inline;float:left">Actors: </p>
+        <p style="margin:0;display:inline">Actors: </p>
         {% for actor in movie.actors %}
-            <p style="margin:10;display:inline;float:left"> {{actor}},  </p>
+            <li style="margin-right:30;display:inline"> {{actor}}, </li>
         {% endfor %}
         <p></p>
-
+        <div style="float:left">
+            <button class="btn-general" onclick="location.href='{{ year_urls[movie.release_year] }}'">{{ movie.release_year }}</button>
+            {% for genre in movie.genres %}
+            <button class="btn-general" onclick="location.href='{{ genre_urls[genre] }}'">{{ genre }}</button>
+            {% endfor %}
+        </div>
         <div style="float:right">
             {% if movie.reviews|length > 0 and movie.rank != show_reviews_for_movie %}
                 <button class="btn-general" onclick="location.href='{{ movie.view_review_url }}'">{{ movie.reviews|length }} reviews</button>
