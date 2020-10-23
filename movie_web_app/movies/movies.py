@@ -14,6 +14,9 @@ import movie_web_app.movies.services as services
 
 from movie_web_app.authentication.authentication import login_required
 
+from urllib.request import urlopen
+import urllib.parse
+import ast
 
 # Configure Blueprint.
 movies_blueprint = Blueprint(
@@ -47,6 +50,17 @@ def movies_by_rank():
     # Fetch movie(s) for the target rank. This call also returns the previous and next rank for movies immediately
     # before and after the target rank.
     movie = services.get_movie(target_rank, repo.repo_instance)
+    movie_image = {}
+    title = movie["title"]
+    args = {"t": title}
+    link = "http://www.omdbapi.com/?{}&apikey=4421208f".format(urllib.parse.urlencode(args))
+    response = urlopen(link)
+    content = response.read()
+    content_dict = content.decode("UTF-8")
+    detail = ast.literal_eval(content_dict)
+    image = detail["Poster"]
+    movie_image[movie["title"]] = image
+
     previous_rank = target_rank - 1
     next_rank = target_rank + 1
 
@@ -77,7 +91,8 @@ def movies_by_rank():
             title='Movie',
             movies_title='Rank' + str(target_rank),
             movies=[movie],
-            selected_movies=utilities.get_selected_movies(10),# len(movie) * 2),
+            image=movie_image,
+            selected_movies=utilities.get_selected_movies(10),
             rank_urls=utilities.get_rank_and_url(),
             year_urls=utilities.get_years_and_urls(),
             genre_urls=utilities.get_genres_and_urls(),
@@ -94,7 +109,7 @@ def movies_by_rank():
 
 @movies_blueprint.route('/movies_by_year', methods=['GET'])
 def movies_by_year():
-    movies_per_page = 4
+    movies_per_page = 2
 
     # Read query parameters.
     year = request.values.get('release_year')
@@ -122,6 +137,17 @@ def movies_by_year():
     #movie_ranks = services.get_movies_by_year(year, repo.repo_instance)
     # Retrieve the batch of movies to display on the Web page.
     movies = services.get_movies_by_rank(movie_ranks[cursor:cursor + movies_per_page], repo.repo_instance)
+    movies_image = {}
+    for movie in movies:
+        title = movie["title"]
+        args = {"t": title}
+        link = "http://www.omdbapi.com/?{}&apikey=4421208f".format(urllib.parse.urlencode(args))
+        response = urlopen(link)
+        content = response.read()
+        content_dict = content.decode("UTF-8")
+        detail = ast.literal_eval(content_dict)
+        image = detail["Poster"]
+        movies_image[movie["title"]] = image
 
     first_movie_url = None
     last_movie_url = None
@@ -155,6 +181,7 @@ def movies_by_year():
         movies_title='Movies released in ' + str(year),
         #release_year=year,
         movies=movies,
+        image=movies_image,
         selected_movies=utilities.get_selected_movies(10),#len(movies) * 2),
         year_urls=utilities.get_years_and_urls(),
         genre_urls=utilities.get_genres_and_urls(),
@@ -169,7 +196,7 @@ def movies_by_year():
 
 @movies_blueprint.route('/movies_by_genre', methods=['GET'])
 def movies_by_genre():
-    movies_per_page = 4
+    movies_per_page = 2
 
     # Read query parameters.
     genre = request.args.get('genre')
@@ -195,6 +222,18 @@ def movies_by_genre():
 
     # Retrieve the batch of movies to display on the Web page.
     movies = services.get_movies_by_rank(movie_ranks[cursor:cursor + movies_per_page], repo.repo_instance)
+
+    movies_image = {}
+    for movie in movies:
+        title = movie["title"]
+        args = {"t": title}
+        link = "http://www.omdbapi.com/?{}&apikey=4421208f".format(urllib.parse.urlencode(args))
+        response = urlopen(link)
+        content = response.read()
+        content_dict = content.decode("UTF-8")
+        detail = ast.literal_eval(content_dict)
+        image = detail["Poster"]
+        movies_image[movie["title"]] = image
 
     first_movie_url = None
     last_movie_url = None
@@ -227,6 +266,7 @@ def movies_by_genre():
         #title='Movies',
         movies_title='Movies in ' + genre,
         movies=movies,
+        image=movies_image,
         selected_movies=utilities.get_selected_movies(10),#len(movies) * 2),
         year_urls=utilities.get_years_and_urls(),
         genre_urls=utilities.get_genres_and_urls(),
@@ -295,7 +335,7 @@ def review_on_movie():
 
 @movies_blueprint.route('/movies_by_search', methods=['GET', 'POST'])
 def movies_by_search():
-    movies_per_page = 4
+    movies_per_page = 2
 
     q = request.args.get('q')
     cursor = request.args.get('cursor')
@@ -323,10 +363,23 @@ def movies_by_search():
 
             if q in movie.values() or q in movie['actors'] or q in movie['genres']:
                 movie_ranks.append(movie['rank'])
-            if int(q) in movie.values():
-                movie_ranks.append(movie['rank'])
+            if q is int:
+                if int(q) in movie.values():
+                    movie_ranks.append(movie['rank'])
         # Retrieve the batch of movies to display on the Web page.
         movies = services.get_movies_by_rank(movie_ranks[cursor:cursor + movies_per_page], repo.repo_instance)
+
+        movies_image = {}
+        for movie in movies:
+            title = movie["title"]
+            args = {"t": title}
+            link = "http://www.omdbapi.com/?{}&apikey=4421208f".format(urllib.parse.urlencode(args))
+            response = urlopen(link)
+            content = response.read()
+            content_dict = content.decode("UTF-8")
+            detail = ast.literal_eval(content_dict)
+            image = detail["Poster"]
+            movies_image[movie["title"]] = image
 
         first_movie_url = None
         last_movie_url = None
@@ -373,6 +426,7 @@ def movies_by_search():
         'movies/movies.html',
         movies_title='Search result: ' + q,
         movies=movies,
+        image=movies_image,
         selected_movies=utilities.get_selected_movies(10),
         year_urls=utilities.get_years_and_urls(),
         genre_urls=utilities.get_genres_and_urls(),
