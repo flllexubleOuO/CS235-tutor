@@ -30,7 +30,7 @@ def get_genres_and_urls():
     genres_list = services.get_genres_list(repo.repo_instance)
     genre_urls = dict()
     for genre in genres_list:
-        genre_urls[genre] = url_for('movies_bp.movies_by_genre', genre = genre)
+        genre_urls[genre] = url_for('movies_bp.movies_by_genre', genre=genre)
 
     return genre_urls
 
