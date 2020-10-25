@@ -50,3 +50,9 @@ assigns TEST_DATA_PATH with the following value (the use of os.path.join and os.
 You can then run tests from within PyCharm.
 
 `% python -m pytest`
+
+## Design Report
+
+A design report is included in the master file.
+
+`COMPSCI 235 Assignment 2 Design Report.pdf`
