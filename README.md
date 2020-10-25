@@ -55,4 +55,4 @@ You can then run tests from within PyCharm.
 
 A design report is included in the master file.
 
-`COMPSCI 235 Assignment 2 Design Report.pdf`
+`CS235Assignment2Journal.pdf`
